@@ -67,19 +67,12 @@ documents and developers who want to build their own RAG pipeline.
 ## Key Features
 
 - **Host your own document QA (RAG) web-UI**: Support multi-user login, organize your files in private/public collections, collaborate and share your favorite chat with others.
-
 - **Organize your LLM & Embedding models**: Support both local LLMs & popular API providers (OpenAI, Azure, Ollama, Groq).
-
 - **Hybrid RAG pipeline**: Sane default RAG pipeline with hybrid (full-text & vector) retriever and re-ranking to ensure best retrieval quality.
-
 - **Multi-modal QA support**: Perform Question Answering on multiple documents with figures and tables support. Support multi-modal document parsing (selectable options on UI).
-
-- **Advanced citations with document preview**: By default the system will provide detailed citations to ensure the correctness of LLM answers. View your citations (incl. relevant score) directly in the _in-browser PDF viewer_ with highlights. Warning when retrieval pipeline return low relevant articles.
-
+- __Advanced citations with document preview__: By default the system will provide detailed citations to ensure the correctness of LLM answers. View your citations (incl. relevant score) directly in the _in-browser PDF viewer_ with highlights. Warning when retrieval pipeline return low relevant articles.
 - **Support complex reasoning methods**: Use question decomposition to answer your complex/multi-hop question. Support agent-based reasoning with `ReAct`, `ReWOO` and other agents.
-
 - **Configurable settings UI**: You can adjust most important aspects of retrieval & generation process on the UI (incl. prompts).
-
 - **Extensible**: Being built on Gradio, you are free to customize or add any UI elements as you like. Also, we aim to support multiple strategies for document indexing & retrieval. `GraphRAG` indexing pipeline is provided as an example.
 
 ![Preview](https://raw.githubusercontent.com/Cinnamon/kotaemon/main/docs/images/preview.png)
@@ -98,64 +91,76 @@ documents and developers who want to build their own RAG pipeline.
 
 1. We support both `lite` & `full` version of Docker images. With `full` version, the extra packages of `unstructured` will be installed, which can support additional file types (`.doc`, `.docx`, ...) but the cost is larger docker image size. For most users, the `lite` image should work well in most cases.
 
-   - To use the `full` version.
+- To use the `full` version.
 
-     ```bash
-     docker run \
-     -e GRADIO_SERVER_NAME=0.0.0.0 \
-     -e GRADIO_SERVER_PORT=7860 \
-     -v ./ktem_app_data:/app/ktem_app_data \
-     -p 7860:7860 -it --rm \
-     ghcr.io/cinnamon/kotaemon:main-full
-     ```
+```bash
+docker run \
+-e GRADIO_SERVER_NAME=0.0.0.0 \
+-e GRADIO_SERVER_PORT=7860 \
+-v ./ktem_app_data:/app/ktem_app_data \
+-p 7860:7860 -it --rm \
+ghcr.io/cinnamon/kotaemon:main-full
+```
 
-   - To use the `full` version with bundled **Ollama** for _local / private RAG_.
+This cli can make container start with no python file running...
 
-     ```bash
-     # change image name to
-     docker run <...> ghcr.io/cinnamon/kotaemon:main-ollama
-     ```
+```bash
+docker run --name kotaemon-yjxzp-01 --entrypoint "" \
+-e GRADIO_SERVER_NAME=0.0.0.0 \
+-e GRADIO_SERVER_PORT=7860 \
+-v ./ktem_app_data:/app/ktem_app_data \
+-p 7860:7860 -it \
+--platform linux/arm64 \
+ghcr.io/cinnamon/kotaemon:main-full bash
 
-   - To use the `lite` version.
+```
 
-   ```bash
-    # change image name to
-    docker run <...> ghcr.io/cinnamon/kotaemon:main-lite
-   ```
+- To use the `full` version with bundled __Ollama__ for _local / private RAG_.
+
+```bash
+# change image name to
+docker run <...> ghcr.io/cinnamon/kotaemon:main-ollama
+```
+
+- To use the `lite` version.
+
+```bash
+ # change image name to
+ docker run <...> ghcr.io/cinnamon/kotaemon:main-lite
+```
 
 2. We currently support and test two platforms: `linux/amd64` and `linux/arm64` (for newer Mac). You can specify the platform by passing `--platform` in the `docker run` command. For example:
 
-   ```bash
-   # To run docker with platform linux/arm64
-   docker run \
-   -e GRADIO_SERVER_NAME=0.0.0.0 \
-   -e GRADIO_SERVER_PORT=7860 \
-   -v ./ktem_app_data:/app/ktem_app_data \
-   -p 7860:7860 -it --rm \
-   --platform linux/arm64 \
-   ghcr.io/cinnamon/kotaemon:main-lite
-   ```
+```bash
+# To run docker with platform linux/arm64
+docker run \
+-e GRADIO_SERVER_NAME=0.0.0.0 \
+-e GRADIO_SERVER_PORT=7860 \
+-v ./ktem_app_data:/app/ktem_app_data \
+-p 7860:7860 -it --rm \
+--platform linux/arm64 \
+ghcr.io/cinnamon/kotaemon:main-lite
+```
 
 3. Once everything is set up correctly, you can go to `http://localhost:7860/` to access the WebUI.
-
 4. We use [GHCR](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry) to store docker images, all images can be found [here.](https://github.com/Cinnamon/kotaemon/pkgs/container/kotaemon)
 
 ### Without Docker
 
 1. Clone and install required packages on a fresh python environment.
 
-   ```shell
-   # optional (setup env)
-   conda create -n kotaemon python=3.10
-   conda activate kotaemon
+```sh
+# optional (setup env)
+conda create -n kotaemon python=3.10
+conda activate kotaemon
 
-   # clone this repo
-   git clone https://github.com/Cinnamon/kotaemon
-   cd kotaemon
+# clone this repo
+git clone https://github.com/Cinnamon/kotaemon
+cd kotaemon
 
-   pip install -e "libs/kotaemon[all]"
-   pip install -e "libs/ktem"
-   ```
+pip install -e "libs/kotaemon[all]"
+pip install -e "libs/ktem"
+```
 
 2. Create a `.env` file in the root of this project. Use `.env.example` as a template
 
@@ -167,14 +172,14 @@ documents and developers who want to build their own RAG pipeline.
 
 4. Start the web server:
 
-   ```shell
-   python app.py
-   ```
+```sh
+python app.py
+```
 
-   - The app will be automatically launched in your browser.
-   - Default username and password are both `admin`. You can set up additional users directly through the UI.
+- The app will be automatically launched in your browser.
+- Default username and password are both `admin`. You can set up additional users directly through the UI.
 
-   ![Chat tab](https://raw.githubusercontent.com/Cinnamon/kotaemon/main/docs/images/chat-tab.png)
+![Chat tab](https://raw.githubusercontent.com/Cinnamon/kotaemon/main/docs/images/chat-tab.png)
 
 5. Check the `Resources` tab and `LLMs and Embeddings` and ensure that your `api_key` value is set correctly from your `.env` file. If it is not set, you can set it there.
 
@@ -190,11 +195,11 @@ documents and developers who want to build their own RAG pipeline.
 
 - Install nano-GraphRAG: `pip install nano-graphrag`
 - `nano-graphrag` install might introduce version conflicts, see [this issue](https://github.com/Cinnamon/kotaemon/issues/440)
-  - To quickly fix: `pip uninstall hnswlib chroma-hnswlib && pip install chroma-hnswlib`
+
+   - To quickly fix: `pip uninstall hnswlib chroma-hnswlib && pip install chroma-hnswlib`
+
 - Launch Kotaemon with `USE_NANO_GRAPHRAG=true` environment variable.
 - Set your default LLM & Embedding models in Resources setting and it will be recognized automatically from NanoGraphRAG.
-
-</details>
 
 <details>
 
@@ -202,11 +207,13 @@ documents and developers who want to build their own RAG pipeline.
 
 - Install LightRAG: `pip install git+https://github.com/HKUDS/LightRAG.git`
 - `LightRAG` install might introduce version conflicts, see [this issue](https://github.com/Cinnamon/kotaemon/issues/440)
-  - To quickly fix: `pip uninstall hnswlib chroma-hnswlib && pip install chroma-hnswlib`
+
+   - To quickly fix: `pip uninstall hnswlib chroma-hnswlib && pip install chroma-hnswlib`
+
 - Launch Kotaemon with `USE_LIGHTRAG=true` environment variable.
 - Set your default LLM & Embedding models in Resources setting and it will be recognized automatically from LightRAG.
 
-</details>
+`Note:`Ignore error when run the quickly fix!!!
 
 <details>
 
@@ -214,12 +221,12 @@ documents and developers who want to build their own RAG pipeline.
 
 - **Non-Docker Installation**: If you are not using Docker, install GraphRAG with the following command:
 
-  ```shell
-  pip install "graphrag<=0.3.6" future
-  ```
+```sh
+pip install "graphrag<=0.3.6" future
+```
 
-- **Setting Up API KEY**: To use the GraphRAG retriever feature, ensure you set the `GRAPHRAG_API_KEY` environment variable. You can do this directly in your environment or by adding it to a `.env` file.
-- **Using Local Models and Custom Settings**: If you want to use GraphRAG with local models (like `Ollama`) or customize the default LLM and other configurations, set the `USE_CUSTOMIZED_GRAPHRAG_SETTING` environment variable to true. Then, adjust your settings in the `settings.yaml.example` file.
+- __Setting Up API KEY__: To use the GraphRAG retriever feature, ensure you set the `GRAPHRAG_API_KEY` environment variable. You can do this directly in your environment or by adding it to a `.env` file.
+- __Using Local Models and Custom Settings__: If you want to use GraphRAG with local models (like `Ollama`) or customize the default LLM and other configurations, set the `USE_CUSTOMIZED_GRAPHRAG_SETTING` environment variable to true. Then, adjust your settings in the `settings.yaml.example` file.
 
 </details>
 
@@ -234,18 +241,17 @@ These options are available:
 - [Azure Document Intelligence (API)](https://azure.microsoft.com/en-us/products/ai-services/ai-document-intelligence)
 - [Adobe PDF Extract (API)](https://developer.adobe.com/document-services/docs/overview/pdf-extract-api/)
 - [Docling (local, open-source)](https://github.com/DS4SD/docling)
-  - To use Docling, first install required dependencies: `pip install docling`
+   - To use Docling, first install required dependencies: `pip install docling`
 
 Select corresponding loaders in `Settings -> Retrieval Settings -> File loader`
 
 ### Customize your application
 
 - By default, all application data is stored in the `./ktem_app_data` folder. You can back up or copy this folder to transfer your installation to a new machine.
-
 - For advanced users or specific use cases, you can customize these files:
 
-  - `flowsettings.py`
-  - `.env`
+   - `flowsettings.py`
+   - `.env`
 
 #### `flowsettings.py`
 
@@ -286,72 +292,67 @@ This file provides another way to configure your models and credentials.
 <summary>Configure model via the .env file</summary>
 
 - Alternatively, you can configure the models via the `.env` file with the information needed to connect to the LLMs. This file is located in the folder of the application. If you don't see it, you can create one.
-
 - Currently, the following providers are supported:
+- **OpenAI**
 
-  - **OpenAI**
+In the `.env` file, set the `OPENAI_API_KEY` variable with your OpenAI API key in order
+to enable access to OpenAI's models. There are other variables that can be modified,
+please feel free to edit them to fit your case. Otherwise, the default parameter should
+work for most people.
 
-    In the `.env` file, set the `OPENAI_API_KEY` variable with your OpenAI API key in order
-    to enable access to OpenAI's models. There are other variables that can be modified,
-    please feel free to edit them to fit your case. Otherwise, the default parameter should
-    work for most people.
+```sh
+OPENAI_API_BASE=https://api.openai.com/v1
+OPENAI_API_KEY=<your OpenAI API key here>
+OPENAI_CHAT_MODEL=gpt-3.5-turbo
+OPENAI_EMBEDDINGS_MODEL=text-embedding-ada-002
+```
 
-    ```shell
-    OPENAI_API_BASE=https://api.openai.com/v1
-    OPENAI_API_KEY=<your OpenAI API key here>
-    OPENAI_CHAT_MODEL=gpt-3.5-turbo
-    OPENAI_EMBEDDINGS_MODEL=text-embedding-ada-002
-    ```
+- **Azure OpenAI**
 
-  - **Azure OpenAI**
+For OpenAI models via Azure platform, you need to provide your Azure endpoint and API
+key. Your might also need to provide your developments' name for the chat model and the
+embedding model depending on how you set up Azure development.
 
-    For OpenAI models via Azure platform, you need to provide your Azure endpoint and API
-    key. Your might also need to provide your developments' name for the chat model and the
-    embedding model depending on how you set up Azure development.
+```sh
+AZURE_OPENAI_ENDPOINT=
+AZURE_OPENAI_API_KEY=
+OPENAI_API_VERSION=2024-02-15-preview
+AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-35-turbo
+AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT=text-embedding-ada-002
+```
 
-    ```shell
-    AZURE_OPENAI_ENDPOINT=
-    AZURE_OPENAI_API_KEY=
-    OPENAI_API_VERSION=2024-02-15-preview
-    AZURE_OPENAI_CHAT_DEPLOYMENT=gpt-35-turbo
-    AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT=text-embedding-ada-002
-    ```
+- **Local Models**
+- Using `ollama` OpenAI compatible server:
+- Install [ollama](https://github.com/ollama/ollama) and start the application.
+- Pull your model, for example:
 
-  - **Local Models**
+```sh
+ollama pull llama3.1:8b
+ollama pull nomic-embed-text
+```
 
-    - Using `ollama` OpenAI compatible server:
+- Set the model names on web UI and make it as default:
 
-      - Install [ollama](https://github.com/ollama/ollama) and start the application.
+   ![Models](https://raw.githubusercontent.com/Cinnamon/kotaemon/main/docs/images/models.png)
 
-      - Pull your model, for example:
+- Using `GGUF` with `llama-cpp-python`
 
-        ```shell
-        ollama pull llama3.1:8b
-        ollama pull nomic-embed-text
-        ```
+   You can search and download a LLM to be ran locally from the [Hugging Face Hub](https://huggingface.co/models). Currently, these model formats are supported:
 
-      - Set the model names on web UI and make it as default:
+   - GGUF
 
-        ![Models](https://raw.githubusercontent.com/Cinnamon/kotaemon/main/docs/images/models.png)
+      You should choose a model whose size is less than your device's memory and should leave
+      about 2 GB. For example, if you have 16 GB of RAM in total, of which 12 GB is available,
+      then you should choose a model that takes up at most 10 GB of RAM. Bigger models tend to
+      give better generation but also take more processing time.
 
-    - Using `GGUF` with `llama-cpp-python`
+      Here are some recommendations and their size in memory:
 
-      You can search and download a LLM to be ran locally from the [Hugging Face Hub](https://huggingface.co/models). Currently, these model formats are supported:
+   - [Qwen1.5-1.8B-Chat-GGUF](https://huggingface.co/Qwen/Qwen1.5-1.8B-Chat-GGUF/resolve/main/qwen1_5-1_8b-chat-q8_0.gguf?download=true): around 2 GB
 
-      - GGUF
+      Add a new LlamaCpp model with the provided model name on the web UI.
 
-        You should choose a model whose size is less than your device's memory and should leave
-        about 2 GB. For example, if you have 16 GB of RAM in total, of which 12 GB is available,
-        then you should choose a model that takes up at most 10 GB of RAM. Bigger models tend to
-        give better generation but also take more processing time.
-
-        Here are some recommendations and their size in memory:
-
-      - [Qwen1.5-1.8B-Chat-GGUF](https://huggingface.co/Qwen/Qwen1.5-1.8B-Chat-GGUF/resolve/main/qwen1_5-1_8b-chat-q8_0.gguf?download=true): around 2 GB
-
-        Add a new LlamaCpp model with the provided model name on the web UI.
-
-  </details>
+</details>
 
 ### Adding your own RAG pipeline
 
