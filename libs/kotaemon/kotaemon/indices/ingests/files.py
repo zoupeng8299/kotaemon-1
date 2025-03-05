@@ -52,7 +52,8 @@ KH_DEFAULT_FILE_EXTRACTORS: dict[str, BaseReader] = {
     ".jpg": unstructured,
     ".tiff": unstructured,
     ".tif": unstructured,
-    ".pdf": PDFThumbnailReader(),
+    # ".pdf": PDFThumbnailReader(),
+    ".pdf": DoclingReader(),
     ".txt": TxtReader(),
     ".md": TxtReader(),
 }
@@ -77,7 +78,8 @@ class DocumentIngestor(BaseComponent):
             The default file extractors are stored in `KH_DEFAULT_FILE_EXTRACTORS`
     """
 
-    pdf_mode: str = "normal"  # "normal", "mathpix", "ocr", "multimodal"
+    # pdf_mode: str = "normal"  # "normal", "mathpix", "ocr", "multimodal"
+    pdf_mode: str = "multimodal"  # "normal", "mathpix", "ocr", "multimodal"
     doc_parsers: list[BaseDocParser] = Param(default_callback=lambda _: [])
     text_splitter: BaseSplitter = TokenSplitter.withx(
         chunk_size=1024,
@@ -100,7 +102,8 @@ class DocumentIngestor(BaseComponent):
         elif self.pdf_mode == "ocr":
             file_extractors[".pdf"] = OCRReader()
         elif self.pdf_mode == "multimodal":
-            file_extractors[".pdf"] = AdobeReader()
+            # file_extractors[".pdf"] = AdobeReader()
+            file_extractors[".pdf"] = DoclingReader()
         else:
             file_extractors[".pdf"] = MathpixPDFReader()
 
