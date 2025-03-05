@@ -412,53 +412,56 @@ KH_INDICES = [
                 "use_ocr": True,
                 "figure_friendly": True,
                 "table_extraction": True,
-                # DoclingReader 特定配置
                 "docling_options": {
-                    # 1. OCR 配置 - RapidOcrOptions
+                    # 1. OCR 配置 - 优化后的设置
                     "ocr": {
-                        # 移除 "engine": "rapidocr" - RapidOcrOptions 类不接受此参数
                         "force_full_page_ocr": True,
-                        "lang": ["ch_sim", "en"],  # 修正: languages -> lang
-                        # 移除 pipeline_options, 这是 PdfPipelineOptions 的参数
+                        "lang": ["ch_sim", "en"],
+                        "det_limit_side_len": 2560,  # 增加最大检测尺寸
+                        "rec_batch_num": 6           # 增加批处理能力
                     },
-                    # 2. 管道选项 - 应放在 ocr 之外
+                    # 2. 管道选项
                     "pipeline_options": {
                         "do_ocr": True,
                         "do_table_structure": True,
                         "table_structure_options": {
                             "do_cell_matching": True
                         },
-                        # RapidOCR 特定模型参数应放在这里
                         "ocr_model_params": {  
                             "det_model_name": "ch_PP-OCRv3_det_infer",
                             "rec_model_name": "ch_PP-OCRv3_rec_infer", 
                             "cls_model_name": "ch_ppocr_mobile_v2.0_cls_infer",
                             "use_angle_cls": True,
-                            "box_thresh": 0.6,
-                            "unclip_ratio": 1.6
+                            "box_thresh": 0.15,         # 降低检测阈值提高召回率
+                            "unclip_ratio": 2.2,        # 增大比例更好捕获文字
+                            "text_score_thresh": 0.5,   # 降低置信度阈值
+                            "use_dilation": True        # 使用膨胀操作增强文本区域
                         }
                     },
-                    # 3. PDF 处理配置 - 无需修改
+                    # 3. PDF 处理配置
                     "pdf": {
                         "image_settings": {
-                            "max_size": 2000,
+                            "max_size": 3000,        # 增加最大尺寸
                             "min_size": 50,
-                            "quality": 85,
-                            "dpi": 200,
-                            "compression": True
+                            "quality": 100,          # 最高质量
+                            "dpi": 400               # 提高 DPI
                         },
                         "preprocessing": {
-                            "denoise": True,
-                            "deskew": True,
-                            "normalize": True
+                            "denoise": False,        # 关闭降噪避免细节丢失
+                            "contrast_enhance": True, # 增强对比度
+                            "normalize": True,
+                            "deskew": True,          # 校正倾斜
+                            "sharpen": True,         # 锐化图像
+                            "auto_rotate": True,     # 自动旋转
+                            "page_orientation": "auto" # 自动检测页面方向
                         },
                         "table_options": {
                             "min_cells": 4,
                             "structure_mode": True
                         }
-                    }
+                    },    
+                    "config_source": "flowsettings.py v1.0"  # 添加标记
                 },
-                # 图片处理限制
                 "max_figure_to_caption": 100,
                 "figure_friendly_filetypes": [
                     ".pdf", ".jpeg", ".jpg", ".png", 

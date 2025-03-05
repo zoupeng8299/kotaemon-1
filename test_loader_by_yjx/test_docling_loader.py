@@ -83,63 +83,118 @@ def test_docling_loader(pdf_path: str):
     # 检查PDF旋转状态并自动处理
     pdf_path, rotation_info = check_and_auto_rotate_pdf(pdf_path)
     
-    # 创建 DoclingReader 实例 - 使用正确的初始化方式
+    # 从 flowsettings.py 获取配置
+    try:
+        # 导入 flowsettings 模块
+        sys.path.insert(0, "/Volumes/KSdisk/zoupeng project/ai_projects/GitHub/Cinnamon/kotaemon")
+        import flowsettings
+        
+        # 查找包含 DoclingLoader 的配置
+        docling_config = None
+        for i, index_config in enumerate(flowsettings.KH_INDICES):
+            if "config" in index_config and "loader_config" in index_config["config"]:
+                loader_config = index_config["config"]["loader_config"]
+                if loader_config.get("__type__") == "kotaemon.loaders.DoclingLoader":
+                    print(f"找到了 DoclingLoader 配置，位于 KH_INDICES[{i}]")
+                    docling_config = loader_config
+                    break
+        
+        if not docling_config:
+            print("警告: 在 flowsettings.py 中未找到 DoclingLoader 配置，使用默认配置")
+    except Exception as e:
+        print(f"加载 flowsettings.py 配置时出错: {e}")
+        print("使用默认配置")
+        docling_config = None
+    
+    # 创建 DoclingReader 实例
     reader = DoclingReader()
     
-    # 修改 reader 实例的属性而不是传递 options
-    reader.figure_friendly_filetypes = [".pdf", ".jpeg", ".jpg", ".png", ".bmp", ".tiff", ".heif", ".tif"]
-    
-    # 手动设置 options 属性（如果 BaseReader 支持）
-    reader._options = {
-        "docling_options": {
-            "ocr": {
-                "force_full_page_ocr": True,
-                "lang": ["ch_sim", "en"],
-                "det_limit_side_len": 2560,  # 增加最大检测尺寸
-                "rec_batch_num": 6           # 增加批处理能力
-            },
-            "pipeline_options": {
-                "do_ocr": True,
-                "do_table_structure": True,
-                "table_structure_options": {
-                    "do_cell_matching": True
+    # 应用从 flowsettings.py 获取的配置
+    if docling_config:
+        print("使用 flowsettings.py 中的配置")
+        # 检查配置完整性
+        print("\n配置检查:")
+        print("- figure_friendly_filetypes:", "存在" if "figure_friendly_filetypes" in docling_config else "缺失")
+        print("- max_figure_to_caption:", "存在" if "max_figure_to_caption" in docling_config else "缺失")
+        print("- docling_options:", "存在" if "docling_options" in docling_config else "缺失")
+        
+        if "docling_options" in docling_config:
+            docling_opts = docling_config["docling_options"]
+            print("  - ocr:", "存在" if "ocr" in docling_opts else "缺失")
+            print("  - pipeline_options:", "存在" if "pipeline_options" in docling_opts else "缺失")
+            print("  - pdf:", "存在" if "pdf" in docling_opts else "缺失")
+        
+        # 设置文件类型
+        if "figure_friendly_filetypes" in docling_config:
+            reader.figure_friendly_filetypes = docling_config["figure_friendly_filetypes"]
+        
+        # 设置最大图片说明数量
+        if "max_figure_to_caption" in docling_config:
+            reader.max_figure_to_caption = docling_config["max_figure_to_caption"]
+        
+        # 设置 VLM 端点
+        if "vlm_endpoint" in docling_config:
+            reader.vlm_endpoint = docling_config["vlm_endpoint"]
+        
+        # 设置 docling_options
+        reader._options = {"docling_options": docling_config.get("docling_options", {})}
+    else:
+        # 使用默认配置
+        reader.figure_friendly_filetypes = [".pdf", ".jpeg", ".jpg", ".png", ".bmp", ".tiff", ".heif", ".tif"]
+        reader._options = {
+            "docling_options": {
+                "ocr": {
+                    "force_full_page_ocr": True,
+                    "lang": ["ch_sim", "en"],
+                    "det_limit_side_len": 2560,  # 增加最大检测尺寸
+                    "rec_batch_num": 6           # 增加批处理能力
                 },
-                "ocr_model_params": {  
-                    "det_model_name": "ch_PP-OCRv3_det_infer",
-                    "rec_model_name": "ch_PP-OCRv3_rec_infer", 
-                    "cls_model_name": "ch_ppocr_mobile_v2.0_cls_infer",
-                    "use_angle_cls": True,
-                    "box_thresh": 0.15,         # 进一步降低检测阈值
-                    "unclip_ratio": 2.2,        # 进一步增大比例
-                    "text_score_thresh": 0.5,   # 降低文本置信度阈值
-                    "use_dilation": True        # 使用膨胀操作增强文本区域
-                }
-            },
-            "pdf": {
-                "image_settings": {
-                    "max_size": 3000,        # 增加最大尺寸
-                    "min_size": 50,
-                    "quality": 100,           # 提高质量
-                    "dpi": 400               # 提高 DPI
+                "pipeline_options": {
+                    "do_ocr": True,
+                    "do_table_structure": True,
+                    "table_structure_options": {
+                        "do_cell_matching": True
+                    },
+                    "ocr_model_params": {  
+                        "det_model_name": "ch_PP-OCRv3_det_infer",
+                        "rec_model_name": "ch_PP-OCRv3_rec_infer", 
+                        "cls_model_name": "ch_ppocr_mobile_v2.0_cls_infer",
+                        "use_angle_cls": True,
+                        "box_thresh": 0.15,         # 进一步降低检测阈值
+                        "unclip_ratio": 2.2,        # 进一步增大比例
+                        "text_score_thresh": 0.5,   # 降低文本置信度阈值
+                        "use_dilation": True        # 使用膨胀操作增强文本区域
+                    }
                 },
-                "preprocessing": {
-                    "denoise": False,
-                    "contrast_enhance": True,
-                    "normalize": True,
-                    "deskew": True,         # 校正倾斜
-                    "sharpen": True,
-                    "auto_rotate": True,    # 添加自动旋转
-                    "page_orientation": "auto"  # 自动检测页面方向
-                },
-                "table_options": {
-                    "min_cells": 4,
-                    "structure_mode": True
+                "pdf": {
+                    "image_settings": {
+                        "max_size": 3000,        # 增加最大尺寸
+                        "min_size": 50,
+                        "quality": 100,           # 提高质量
+                        "dpi": 400               # 提高 DPI
+                    },
+                    "preprocessing": {
+                        "denoise": False,
+                        "contrast_enhance": True,
+                        "normalize": True,
+                        "deskew": True,         # 校正倾斜
+                        "sharpen": True,
+                        "auto_rotate": True,    # 添加自动旋转
+                        "page_orientation": "auto"  # 自动检测页面方向
+                    },
+                    "table_options": {
+                        "min_cells": 4,
+                        "structure_mode": True
+                    }
                 }
             }
-        }
-    }   
-    
+        }   
+        
     # 打印配置信息
+    print("\n===== 配置来源检查 =====")
+    config_source = reader._options.get("docling_options", {}).get("config_source", "默认配置")
+    print(f"配置来源: {config_source}")
+
     print("OCR 配置:", json.dumps(reader._options["docling_options"]["ocr"], ensure_ascii=False))
     print("管道配置:", json.dumps(reader._options["docling_options"]["pipeline_options"], ensure_ascii=False))
 
