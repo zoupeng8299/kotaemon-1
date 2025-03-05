@@ -1,4 +1,50 @@
 import os
+
+"""
+This module sets up various configurations for the Kotaemon application.
+
+Attributes:
+    KH_PACKAGE_NAME (str): The name of the Kotaemon application package.
+    KH_APP_VERSION (str): The version of the Kotaemon application.
+    KH_GRADIO_SHARE (bool): Flag to enable or disable Gradio sharing.
+    KH_ENABLE_FIRST_SETUP (bool): Flag to enable or disable the first setup.
+    KH_DEMO_MODE (bool): Flag to enable or disable demo mode.
+    KH_OLLAMA_URL (str): The URL for the Ollama service.
+    KH_APP_DATA_DIR (Path): Directory for storing application data.
+    KH_APP_DATA_EXISTS (bool): Flag indicating if the application data directory exists.
+    KH_USER_DATA_DIR (Path): Directory for storing user data.
+    KH_MARKDOWN_OUTPUT_DIR (Path): Directory for storing markdown output.
+    KH_CHUNKS_OUTPUT_DIR (Path): Directory for storing chunks output.
+    KH_ZIP_OUTPUT_DIR (Path): Directory for storing zip output.
+    KH_ZIP_INPUT_DIR (Path): Directory for storing zip input.
+    KH_DOC_DIR (Path): Directory for storing documentation.
+    KH_MODE (str): The mode in which the application is running (e.g., "dev").
+    KH_SSO_ENABLED (bool): Flag to enable or disable Single Sign-On (SSO).
+    KH_FEATURE_CHAT_SUGGESTION (bool): Flag to enable or disable chat suggestions.
+    KH_FEATURE_USER_MANAGEMENT (bool): Flag to enable or disable user management.
+    KH_USER_CAN_SEE_PUBLIC (None): Placeholder for user visibility settings.
+    KH_FEATURE_USER_MANAGEMENT_ADMIN (str): Admin username for user management.
+    KH_FEATURE_USER_MANAGEMENT_PASSWORD (str): Admin password for user management.
+    KH_ENABLE_ALEMBIC (bool): Flag to enable or disable Alembic migrations.
+    KH_DATABASE (str): Database connection string.
+    KH_FILESTORAGE_PATH (str): Path for file storage.
+    KH_WEB_SEARCH_BACKEND (str): Backend for web search functionality.
+    KH_DOCSTORE (dict): Configuration for the document store.
+    KH_VECTORSTORE (dict): Configuration for the vector store.
+    KH_LLMS (dict): Configuration for various Language Model (LLM) services.
+    KH_EMBEDDINGS (dict): Configuration for various embedding services.
+    KH_RERANKINGS (dict): Configuration for reranking models.
+    SETTINGS_APP (dict): Application settings.
+    SETTINGS_REASONING (dict): Reasoning settings.
+    USE_GLOBAL_GRAPHRAG (bool): Flag to enable or disable global GraphRAG.
+    USE_NANO_GRAPHRAG (bool): Flag to enable or disable Nano GraphRAG.
+    USE_LIGHTRAG (bool): Flag to enable or disable LightRAG.
+    USE_MS_GRAPHRAG (bool): Flag to enable or disable MS GraphRAG.
+    GRAPHRAG_INDEX_TYPES (list): List of GraphRAG index types.
+    KH_INDEX_TYPES (list): List of index types.
+    GRAPHRAG_INDICES (list): List of GraphRAG indices.
+    KH_INDICES (list): List of indices.
+"""
 from importlib.metadata import version
 from inspect import currentframe, getframeinfo
 from pathlib import Path
@@ -361,6 +407,64 @@ KH_INDICES = [
                 ".pptx, .csv, .html, .mhtml, .txt, .md, .zip"
             ),
             "private": True,
+            "loader_config": {
+                "__type__": "kotaemon.loaders.DoclingLoader",
+                "use_ocr": True,
+                "figure_friendly": True,
+                "table_extraction": True,
+                # DoclingReader 特定配置
+                "docling_options": {
+                    # 1. OCR 配置 - RapidOcrOptions
+                    "ocr": {
+                        # 移除 "engine": "rapidocr" - RapidOcrOptions 类不接受此参数
+                        "force_full_page_ocr": True,
+                        "lang": ["ch_sim", "en"],  # 修正: languages -> lang
+                        # 移除 pipeline_options, 这是 PdfPipelineOptions 的参数
+                    },
+                    # 2. 管道选项 - 应放在 ocr 之外
+                    "pipeline_options": {
+                        "do_ocr": True,
+                        "do_table_structure": True,
+                        "table_structure_options": {
+                            "do_cell_matching": True
+                        },
+                        # RapidOCR 特定模型参数应放在这里
+                        "ocr_model_params": {  
+                            "det_model_name": "ch_PP-OCRv3_det_infer",
+                            "rec_model_name": "ch_PP-OCRv3_rec_infer", 
+                            "cls_model_name": "ch_ppocr_mobile_v2.0_cls_infer",
+                            "use_angle_cls": True,
+                            "box_thresh": 0.6,
+                            "unclip_ratio": 1.6
+                        }
+                    },
+                    # 3. PDF 处理配置 - 无需修改
+                    "pdf": {
+                        "image_settings": {
+                            "max_size": 2000,
+                            "min_size": 50,
+                            "quality": 85,
+                            "dpi": 200,
+                            "compression": True
+                        },
+                        "preprocessing": {
+                            "denoise": True,
+                            "deskew": True,
+                            "normalize": True
+                        },
+                        "table_options": {
+                            "min_cells": 4,
+                            "structure_mode": True
+                        }
+                    }
+                },
+                # 图片处理限制
+                "max_figure_to_caption": 100,
+                "figure_friendly_filetypes": [
+                    ".pdf", ".jpeg", ".jpg", ".png", 
+                    ".bmp", ".tiff", ".heif", ".tif"
+                ]
+            }
         },
         "index_type": "ktem.index.file.FileIndex",
     },

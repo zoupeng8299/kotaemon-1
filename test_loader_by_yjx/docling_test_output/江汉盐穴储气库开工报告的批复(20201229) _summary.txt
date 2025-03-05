@@ -1,0 +1,8 @@
+文档：/Volumes/KSdisk/zoupeng project/ai_projects/GitHub/Cinnamon/kotaemon/test_loader_by_yjx/resources/江汉盐穴储气库开工报告的批复(20201229) .pdf
+处理时间：2025-03-05 17:38:27
+
+提取结果统计：
+- 总片段数: 2
+- 文本片段: 1
+- 表格片段: 1
+- 图片片段: 0

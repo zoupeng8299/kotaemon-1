@@ -44,11 +44,68 @@ class DoclingReader(BaseReader):
     @Param.auto(cache=True)
     def converter_(self):
         try:
-            from docling.document_converter import DocumentConverter
+            from docling.datamodel.base_models import InputFormat
+            from docling.document_converter import DocumentConverter, PdfFormatOption
+            from docling.datamodel.pipeline_options import (
+                PdfPipelineOptions,
+                RapidOcrOptions,
+            )
         except ImportError:
             raise ImportError("Please install docling: 'pip install docling'")
 
-        return DocumentConverter()
+        # 从配置获取 OCR 和 PDF 设置
+        docling_options = getattr(self, 'options', {}).get('docling_options', {})
+        ocr_config = docling_options.get('ocr', {})
+        pdf_config = docling_options.get('pdf', {})
+        pipeline_config = docling_options.get('pipeline_options', {})
+
+        # 创建 PDF 管道选项
+        pipeline_options = PdfPipelineOptions()
+        
+        # 应用管道选项配置
+        if pipeline_config:
+            pipeline_options.do_ocr = pipeline_config.get('do_ocr', True)
+            pipeline_options.do_table_structure = pipeline_config.get('do_table_structure', True)
+            
+            # 表格结构选项
+            if 'table_structure_options' in pipeline_config:
+                ts_options = pipeline_config['table_structure_options']
+                pipeline_options.table_structure_options.do_cell_matching = ts_options.get('do_cell_matching', True)
+        else:
+            # 默认配置
+            pipeline_options.do_ocr = True
+            pipeline_options.do_table_structure = True
+            pipeline_options.table_structure_options.do_cell_matching = True
+
+        # 配置 RapidOCR 选项
+        try:
+            ocr_options = RapidOcrOptions(
+                force_full_page_ocr=True,
+                **ocr_config
+            )
+            pipeline_options.ocr_options = ocr_options
+            
+            # 应用 OCR 模型参数
+            if 'ocr_model_params' in pipeline_config:
+                model_params = pipeline_config['ocr_model_params']
+                for key, value in model_params.items():
+                    if hasattr(ocr_options, key):
+                        setattr(ocr_options, key, value)
+        except Exception as e:
+            print(f"Error configuring OCR options: {e}, using default settings")
+            pipeline_options.ocr_options = RapidOcrOptions(force_full_page_ocr=True)
+
+        # 创建文档转换器
+        converter = DocumentConverter(
+            format_options={
+                InputFormat.PDF: PdfFormatOption(
+                    pipeline_options=pipeline_options,
+                    **pdf_config
+                )
+            }
+        )
+        
+        return converter
 
     def run(
         self, file_path: str | Path, extra_info: Optional[dict] = None, **kwargs

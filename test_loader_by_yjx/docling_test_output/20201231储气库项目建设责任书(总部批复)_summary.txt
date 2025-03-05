@@ -1,0 +1,8 @@
+文档：/Volumes/KSdisk/zoupeng project/ai_projects/GitHub/Cinnamon/kotaemon/test_loader_by_yjx/resources/20201231储气库项目建设责任书(总部批复).pdf
+处理时间：2025-03-05 17:10:25
+
+提取结果统计：
+- 总片段数: 8
+- 文本片段: 8
+- 表格片段: 0
+- 图片片段: 0

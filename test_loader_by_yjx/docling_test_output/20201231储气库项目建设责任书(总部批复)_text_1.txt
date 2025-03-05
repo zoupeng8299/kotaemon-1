@@ -1,0 +1,15 @@
+中国石化
+中國石化
+SINOPEC
+loPEc
+江汉盐穴天然气储气库一期工程一阶段项目 地面工程和联络线工程（地面工程部分）
+建设责任书
+中国石化江汉油田分公司
+二〇二〇年十二月
+
+元数据:
+{
+  "page_label": 1,
+  "file_name": "20201231储气库项目建设责任书(总部批复).pdf",
+  "file_path": "/Volumes/KSdisk/zoupeng project/ai_projects/GitHub/Cinnamon/kotaemon/test_loader_by_yjx/resources/20201231储气库项目建设责任书(总部批复).pdf"
+}

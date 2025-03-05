@@ -1,0 +1,25 @@
+Hopec
+中石化节能环保 工程科技有限公司
+(中石化江汉石油工程设计有限公司) 咨询证书编号：工咨甲22120080001 甲级勘察证书编号：B142001005 甲级设计证书编号：A142001005
+项目号：DD15517
+设备表
+文件号：EQL-0102HV01
+江汉盐穴天然气储气库一期工程一阶段 地面工程
+专业：暖通
+阶
+段：详细设计
+储气库区域
+日
+期：2020.12
+井场单元(1井，3井，6井，8井)
+暖通部分
+第1页共1页
+0版
+王三红
+
+元数据:
+{
+  "page_label": 1,
+  "file_name": "EQL-0102HV01 设备表.pdf",
+  "file_path": "/Volumes/KSdisk/zoupeng project/ai_projects/GitHub/Cinnamon/kotaemon/test_loader_by_yjx/resources/EQL-0102HV01 设备表.pdf"
+}

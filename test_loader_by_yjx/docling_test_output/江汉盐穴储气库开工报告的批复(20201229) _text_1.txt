@@ -1,0 +1,8 @@
+中国石化工程建设项目开工报告表
+
+元数据:
+{
+  "page_label": 1,
+  "file_name": "江汉盐穴储气库开工报告的批复(20201229) .pdf",
+  "file_path": "/Volumes/KSdisk/zoupeng project/ai_projects/GitHub/Cinnamon/kotaemon/test_loader_by_yjx/resources/江汉盐穴储气库开工报告的批复(20201229) .pdf"
+}
