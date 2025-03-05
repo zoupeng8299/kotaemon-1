@@ -458,6 +458,22 @@ KH_INDICES = [
                         "table_options": {
                             "min_cells": 4,
                             "structure_mode": True
+                        },
+                        "image_extraction": {
+                            "enabled": True,
+                            "min_size": 100,  # 最小图片尺寸(像素)
+                            "similarity_threshold": 0.8  # 降低阈值以捕获更多图片
+                        }
+                    },
+                    "image": {
+                        "preprocessing": {
+                            "enhance_contrast": True,
+                            "sharpen": True,
+                            "denoise": False,
+                            "normalize": True
+                        },
+                        "ocr_params": {
+                            "force_full_page_ocr": True
                         }
                     },    
                     "config_source": "flowsettings.py v1.0"  # 添加标记

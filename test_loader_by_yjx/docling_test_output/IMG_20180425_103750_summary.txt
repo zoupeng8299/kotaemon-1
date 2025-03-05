@@ -1,0 +1,8 @@
+文档：/Volumes/KSdisk/zoupeng project/ai_projects/GitHub/Cinnamon/kotaemon/test_loader_by_yjx/resources/IMG_20180425_103750.pdf
+处理时间：2025-03-05 23:33:08
+
+提取结果统计：
+- 总片段数: 1
+- 文本片段: 1
+- 表格片段: 0
+- 图片片段: 0

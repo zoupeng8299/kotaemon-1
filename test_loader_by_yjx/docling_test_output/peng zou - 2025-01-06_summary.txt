@@ -1,5 +1,5 @@
-文档：/Users/zoupeng/Downloads/peng zou - 2025-01-06.pdf
-处理时间：2025-03-05 15:56:26
+文档：/Volumes/KSdisk/zoupeng project/ai_projects/GitHub/Cinnamon/kotaemon/test_loader_by_yjx/resources/peng zou - 2025-01-06.pdf
+处理时间：2025-03-05 22:55:22
 
 提取结果统计：
 - 总片段数: 1

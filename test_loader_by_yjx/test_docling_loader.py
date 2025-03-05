@@ -6,7 +6,42 @@ import json
 import os
 from PyPDF2 import PdfReader, PdfWriter
 import tempfile
+from PIL import Image
+import io
 
+# 在模块级别创建一个全局列表
+temp_files_to_cleanup = []
+
+def convert_image_to_pdf(img_path):
+    """
+    将图像文件转换为临时PDF文件
+    
+    Args:
+        img_path: 图像文件路径
+        
+    Returns:
+        str: 临时PDF文件路径
+    """
+    try:
+        img = Image.open(img_path)
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
+        temp_path = temp_file.name    
+        # 添加到全局列表
+        temp_files_to_cleanup.append(temp_path)  # 添加到全局列表
+        
+        # 转换图像为RGB模式(CMYK等模式可能会导致问题)
+        if img.mode != 'RGB':
+            img = img.convert('RGB')
+        
+        # 保存为PDF文件
+        img.save(temp_path, 'PDF', resolution=400.0)
+        print(f"已将图像转换为PDF，临时文件: {temp_path}")
+        return temp_path
+        
+    except Exception as e:
+        print(f"转换图像到PDF时出错: {e}")
+        return img_path
+    
 # 添加检查和旋转函数
 def check_and_auto_rotate_pdf(pdf_path):
     """
@@ -36,6 +71,8 @@ def check_and_auto_rotate_pdf(pdf_path):
         print("检测到PDF页面有旋转，正在处理...")
         temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.pdf')
         temp_path = temp_file.name
+        # 添加到全局列表
+        temp_files_to_cleanup.append(temp_path)  # 添加到全局列表
         
         writer = PdfWriter()
         for i, page in enumerate(reader.pages):
@@ -71,18 +108,37 @@ def convert_posix_paths(obj):
 sys.path.append("/Volumes/KSdisk/zoupeng project/ai_projects/GitHub/Cinnamon/kotaemon")
 
 from libs.kotaemon.kotaemon.loaders.docling_loader import DoclingReader
-def test_docling_loader(pdf_path: str):
-    """
-    测试 DoclingLoader 的功能
+def test_docling_loader(file_path: str):
+    """测试 DoclingLoader 处理不同文件类型的能力"""
+    # 保存所有创建的临时文件路径
+    temp_files = []
     
-    Args:
-        pdf_path: PDF 文件路径
-    """
-    print(f"正在测试 DoclingLoader，文件路径: {pdf_path}")
-
-    # 检查PDF旋转状态并自动处理
-    pdf_path, rotation_info = check_and_auto_rotate_pdf(pdf_path)
+    print(f"正在测试 DoclingLoader，文件路径: {file_path}")
+    # 根据文件类型进行不同处理
+    processed_path = file_path
+    file_ext = Path(file_path).suffix.lower()
     
+    if file_ext == '.pdf':
+        # PDF文件 - 检查旋转
+        processed_path, rotation_info = check_and_auto_rotate_pdf(file_path)
+        if processed_path != file_path:
+            temp_files.append(processed_path)  # 记录临时文件
+        pdf = PdfReader(processed_path)
+        print(f"PDF信息: {len(pdf.pages)}页, 文件大小: {os.path.getsize(processed_path)/1024/1024:.2f}MB")
+    
+    elif file_ext in ['.jpg', '.jpeg', '.png', '.tiff', '.bmp']:
+        # 图像文件 - 转换为临时PDF以获得更好的OCR效果
+        processed_path = convert_image_to_pdf(file_path)
+        if processed_path != file_path:     # 如果转换成功
+            temp_files.append(processed_path)  # 记录临时文件
+            pdf = PdfReader(processed_path)
+            print(f"图像已转换为PDF, 页数: {len(pdf.pages)}, 文件大小: {os.path.getsize(processed_path)/1024/1024:.2f}MB")
+        else:
+            print(f"文件类型: {file_ext}, 文件大小: {os.path.getsize(file_path)/1024/1024:.2f}MB")
+    else:
+        # 其他文件类型
+        print(f"文件类型: {file_ext}, 文件大小: {os.path.getsize(file_path)/1024/1024:.2f}MB")
+     
     # 从 flowsettings.py 获取配置
     try:
         # 导入 flowsettings 模块
@@ -108,9 +164,17 @@ def test_docling_loader(pdf_path: str):
     
     # 创建 DoclingReader 实例
     reader = DoclingReader()
-    
+
+    # 特别确保这些参数被设置
+    reader.figure_friendly_filetypes = [".pdf", ".jpeg", ".jpg", ".png", ".bmp", ".tiff", ".heif", ".tif"]
+    reader.max_figure_to_caption = 100  # 设置最大图片说明数量
+        
     # 应用从 flowsettings.py 获取的配置
     if docling_config:
+        # 确保 figure_friendly 被正确设置
+        docling_config["figure_friendly"] = True
+        reader._options = {"docling_options": docling_config.get("docling_options", {})}
+
         print("使用 flowsettings.py 中的配置")
         # 检查配置完整性
         print("\n配置检查:")
@@ -185,9 +249,26 @@ def test_docling_loader(pdf_path: str):
                     "table_options": {
                         "min_cells": 4,
                         "structure_mode": True
+                    },
+                    "image_extraction": {
+                        "enabled": True,
+                        "min_size": 100,  # 最小图片尺寸(像素)
+                        "similarity_threshold": 0.8  # 降低阈值以捕获更多图片
+                    }
+                },
+                "image": {
+                    "preprocessing": {
+                        "enhance_contrast": True,
+                        "sharpen": True,
+                        "denoise": False,
+                        "normalize": True
+                    },
+                    "ocr_params": {
+                        "force_full_page_ocr": True
                     }
                 }
-            }
+            },
+            "figure_friendly": True  # 设置为选项而不是属性
         }   
         
     # 打印配置信息
@@ -198,13 +279,15 @@ def test_docling_loader(pdf_path: str):
     print("OCR 配置:", json.dumps(reader._options["docling_options"]["ocr"], ensure_ascii=False))
     print("管道配置:", json.dumps(reader._options["docling_options"]["pipeline_options"], ensure_ascii=False))
 
-    # 检查 PDF 页数和大小
-    pdf = PdfReader(pdf_path)
-    print(f"PDF 信息: {len(pdf.pages)} 页, 文件大小: {os.path.getsize(pdf_path)/1024/1024:.2f}MB")
+    # 仅对PDF文件执行这个检查 - 添加条件判断
+    if file_ext.lower() == '.pdf':
+        # 检查 PDF 页数和大小
+        pdf = PdfReader(file_path)
+        print(f"PDF 信息: {len(pdf.pages)} 页, 文件大小: {os.path.getsize(file_path)/1024/1024:.2f}MB")
 
     # 加载文档
     print("开始处理文档...")
-    docs = reader.load_data(pdf_path)
+    docs = reader.load_data(file_path if processed_path == file_path else processed_path)
     print(f"处理完成，共提取 {len(docs)} 个文档片段")
     
     # 分析结果
@@ -220,17 +303,17 @@ def test_docling_loader(pdf_path: str):
     for i, doc in enumerate(text_docs):
         print(f"页面 {i+1} 提取文本长度: {len(doc.text)} 字符")
     
-    # 提取PDF文件名(不含扩展名)
-    pdf_filename = Path(pdf_path).stem
-    
+    # 提取文件名(不含扩展名)
+    file_filename = Path(file_path).stem  # 改为 file_filename，而不是 pdf_filename
+        
     # 保存部分结果示例
     output_dir = Path("docling_test_output")
     output_dir.mkdir(exist_ok=True)
-    
-    # 使用PDF文件名作为输出文件的前缀
+        
+    # 使用文件名作为输出文件的前缀
     # 保存所有文本片段
     if text_docs:
-        with open(output_dir / f"{pdf_filename}_text.txt", "w", encoding="utf-8") as f:
+        with open(output_dir / f"{file_filename}_text.txt", "w", encoding="utf-8") as f:
             f.write("# 文档全文提取结果\n\n")
             for i, doc in enumerate(text_docs):
                 f.write(f"## 第 {i+1} 页\n\n")
@@ -246,7 +329,7 @@ def test_docling_loader(pdf_path: str):
                 
     # 保存所有表格
     if table_docs:
-        with open(output_dir / f"{pdf_filename}_table.md", "w", encoding="utf-8") as f:
+        with open(output_dir / f"{file_filename}_table.md", "w", encoding="utf-8") as f:
             f.write("# 文档表格提取结果\n\n")
             for i, doc in enumerate(table_docs):
                 f.write(f"## 表格 {i+1}\n\n")
@@ -262,7 +345,7 @@ def test_docling_loader(pdf_path: str):
 
     # 保存所有图片
     if image_docs:
-        with open(output_dir / f"{pdf_filename}_image.txt", "w", encoding="utf-8") as f:
+        with open(output_dir / f"{file_filename}_image.txt", "w", encoding="utf-8") as f:
             f.write("# 文档图片提取结果\n\n")
             for i, doc in enumerate(image_docs):
                 f.write(f"## 图片 {i+1}\n\n")
@@ -279,8 +362,8 @@ def test_docling_loader(pdf_path: str):
                 f.write("\n\n")    
                 
     # 还可以创建一个概述文件
-    with open(output_dir / f"{pdf_filename}_summary.txt", "w", encoding="utf-8") as f:
-        f.write(f"文档：{pdf_path}\n")
+    with open(output_dir / f"{file_filename}_summary.txt", "w", encoding="utf-8") as f:
+        f.write(f"文档：{file_path}\n")
         f.write(f"处理时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n")
         f.write(f"提取结果统计：\n")
         f.write(f"- 总片段数: {len(docs)}\n")
@@ -288,13 +371,35 @@ def test_docling_loader(pdf_path: str):
         f.write(f"- 表格片段: {len(table_docs)}\n")
         f.write(f"- 图片片段: {len(image_docs)}\n")
             
-    print(f"\n测试结果已保存到 {output_dir} 目录，文件前缀: {pdf_filename}")
+    print(f"\n测试结果已保存到 {output_dir} 目录，文件前缀: {file_filename}")
 
+    # 清理临时文件
+    print("\n测试结束，清理临时文件...")
+    for temp_file in temp_files:
+        try:
+            os.remove(temp_file)
+            print(f"已删除临时文件: {temp_file}")
+        except Exception as e:
+            print(f"删除临时文件失败 {temp_file}: {e}")
+    print("测试完成")        
+            
 if __name__ == "__main__":
     # 测试一个包含中文的 PDF 文件
     if len(sys.argv) > 1:
-        pdf_path = sys.argv[1]
+        file_path = sys.argv[1]
     else:
-        pdf_path = input("请输入要测试的 PDF 文件路径: ")
+        file_path = input("请输入要测试的文件路径: ")
         
-    test_docling_loader(pdf_path)
+    try:
+        test_docling_loader(file_path)
+    finally:
+        # 无论测试是否成功，都清理临时文件
+        print("\n程序结束，清理临时文件...")
+        for temp_file in temp_files_to_cleanup:
+            try:
+                if os.path.exists(temp_file):
+                    os.remove(temp_file)
+                    print(f"已删除临时文件: {temp_file}")
+            except Exception as e:
+                print(f"删除临时文件失败 {temp_file}: {e}")
+        print("程序完成")
